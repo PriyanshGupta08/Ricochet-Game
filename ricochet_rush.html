@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ricochet Rush — Physics Puzzle</title><style>body{background:#07101b;margin:0;padding:24px 10px;min-height:100vh;display:grid;place-items:start center}</style></head><body>
+<div id="ricochet-game">
+  <style>
+    #ricochet-game{--rg-bg:#0b1421;--rg-panel:#111e2d;--rg-border:#2a4052;--rg-white:#eef7ff;--rg-muted:#9ab1c2;--rg-cyan:#74e8f8;--rg-lime:#bcfa7b;--rg-amber:#ffca78;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--rg-white);width:100%;line-height:1.4}
+    #ricochet-game *{box-sizing:border-box}
+    #ricochet-game .rg-shell{width:100%;max-width:1100px;margin:auto;padding:22px;border-radius:24px;background:linear-gradient(140deg,#122334 0%,#0a1421 65%,#0b1520 100%);border:1px solid #2d4757;box-shadow:0 22px 70px #07111e2e;overflow:hidden}
+    #ricochet-game button{font:inherit;cursor:pointer;transition:background .15s,transform .15s,border-color .15s;color:inherit}
+    #ricochet-game button:focus-visible{outline:2px solid #c5f46f;outline-offset:3px}
+    #ricochet-game button:active{transform:scale(.97)}
+    #ricochet-game .rg-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+    #ricochet-game .rg-brand{display:flex;align-items:center;gap:13px;min-width:0}
+    #ricochet-game .rg-mark{width:46px;height:46px;display:grid;place-items:center;background:#1c3943;color:#bdfb74;border:1px solid #41645b;border-radius:15px;font-size:27px;font-weight:800;transform:rotate(-6deg);box-shadow:inset 0 0 14px #93e86c1b}
+    #ricochet-game .rg-brandname{font-size:18px;font-weight:850;line-height:1.08;letter-spacing:.07em}
+    #ricochet-game .rg-brandname span{color:#bff984}
+    #ricochet-game .rg-subbrand{font-size:11px;letter-spacing:.13em;color:#9db5c7;margin-top:5px;text-transform:uppercase}
+    #ricochet-game .rg-topright{display:flex;gap:10px;align-items:center}
+    #ricochet-game .rg-tag{padding:9px 13px;border:1px solid #355267;border-radius:999px;font-size:11px;letter-spacing:.08em;color:#c4d9e5;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap}
+    #ricochet-game .rg-tagdot{height:7px;width:7px;border-radius:50%;background:#aafa78;box-shadow:0 0 10px #b9ff7b}
+    #ricochet-game .rg-help{border:1px solid #3a5162;border-radius:50%;width:36px;height:36px;background:#1a2a3a;display:grid;place-items:center;font-weight:900}
+    #ricochet-game .rg-help:hover,#ricochet-game .rg-btn:hover{background:#263e4d}
+    #ricochet-game .rg-mission{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+    #ricochet-game .rg-kicker{font-size:11px;letter-spacing:.17em;color:#aef4fa;font-weight:850}
+    #ricochet-game .rg-mission h2{font-size:clamp(23px,3.5vw,33px);font-weight:850;letter-spacing:-.035em;line-height:1.1;margin:5px 0 7px}
+    #ricochet-game .rg-desc{font-size:12px;color:#acbfd0;max-width:490px}
+    #ricochet-game .rg-stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    #ricochet-game .rg-stat{min-width:96px;padding:10px 13px;border:1px solid #2e4656;border-radius:12px;background:#142637;display:flex;flex-direction:column;gap:3px}
+    #ricochet-game .rg-statlabel{color:#89a6b9;font-size:9px;letter-spacing:.13em;font-weight:800}
+    #ricochet-game .rg-statvalue{font-size:16px;letter-spacing:.01em;font-weight:850;line-height:1.2;font-variant-numeric:tabular-nums}
+    #ricochet-game .rg-statvalue em{font-style:normal;color:#829aa9;font-weight:600}
+    #ricochet-game .rg-heart{color:#ff768a;letter-spacing:.09em}
+    #ricochet-game .rg-field{position:relative;border:1px solid #436276;border-radius:16px;overflow:hidden;background:#06111e;box-shadow:inset 0 0 0 1px #132b3d,0 10px 35px #050f1c55;touch-action:none}
+    #ricochet-game canvas{display:block;width:100%;height:auto;aspect-ratio:960/520;cursor:crosshair;touch-action:none}
+    #ricochet-game .rg-fieldhud{position:absolute;pointer-events:none;top:12px;left:50%;transform:translateX(-50%);padding:7px 11px;display:flex;gap:8px;align-items:center;background:#102435de;border:1px solid #345468;border-radius:8px;font-size:10px;letter-spacing:.065em;font-weight:800;white-space:nowrap;max-width:96%}
+    #ricochet-game .rg-chargeball{width:7px;height:7px;border-radius:50%;background:#ffc47e;box-shadow:0 0 10px #ffbf76}
+    #ricochet-game .rg-fieldhud.is-charged{border-color:#5e8e64;color:#cbffab}
+    #ricochet-game .rg-fieldhud.is-charged .rg-chargeball{background:#b7ff81;box-shadow:0 0 10px #a3ff81}
+    #ricochet-game .rg-toast{position:absolute;bottom:20px;left:50%;transform:translate(-50%,12px);max-width:90%;padding:10px 16px;border-radius:10px;background:#e9faff;color:#122635;box-shadow:0 8px 28px #03081265;font-size:12px;font-weight:850;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;text-align:center}
+    #ricochet-game .rg-toast.show{opacity:1;transform:translate(-50%,0)}
+    #ricochet-game .rg-overlay{position:absolute;inset:0;background:#06121bc9;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:14px;z-index:4}
+    #ricochet-game .rg-overlay[hidden]{display:none}
+    #ricochet-game .rg-modal{width:min(100%,410px);padding:27px 24px 24px;text-align:center;background:linear-gradient(155deg,#183143,#0c1d2c);border:1px solid #497286;border-radius:19px;box-shadow:0 20px 70px #0008}
+    #ricochet-game .rg-modalicon{font-size:30px;color:#bdfb80;margin-bottom:6px}
+    #ricochet-game .rg-modaltitle{font-size:27px;font-weight:900;margin:0 0 8px;letter-spacing:-.04em}
+    #ricochet-game .rg-modaldesc{font-size:13px;line-height:1.6;color:#b8cbda;margin:0 0 18px}
+    #ricochet-game .rg-stars{font-size:32px;letter-spacing:9px;color:#ffda8b;margin-bottom:10px}
+    #ricochet-game .rg-modalbuttons{display:flex;gap:9px;align-items:center;justify-content:center;flex-wrap:wrap}
+    #ricochet-game .rg-toolbar{display:flex;align-items:center;justify-content:space-between;gap:13px;flex-wrap:wrap;margin-top:16px}
+    #ricochet-game .rg-controls{display:flex;gap:8px;flex-wrap:wrap}
+    #ricochet-game .rg-btn{background:#1b3041;border:1px solid #405b6b;color:#d8edf6;border-radius:10px;min-height:40px;padding:10px 15px;font-weight:800;font-size:12px;white-space:nowrap}
+    #ricochet-game .rg-btn-primary{background:#bcf782;border-color:#d4ffb2;color:#193224}
+    #ricochet-game .rg-btn-primary:hover{background:#d5ffad}
+    #ricochet-game .rg-btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+    #ricochet-game .rg-legend{display:flex;align-items:center;gap:13px;flex-wrap:wrap;font-size:11px;color:#a2bbc9;font-weight:700}
+    #ricochet-game .rg-legend span{display:flex;align-items:center;gap:6px}
+    #ricochet-game .rg-key{border:1px solid #456074;border-radius:5px;background:#1d3244;padding:3px 6px;color:#dceef7;font-size:10px}
+    #ricochet-game .rg-swatch{width:14px;height:5px;background:#ffd48a;border-radius:3px;box-shadow:0 0 8px #fdb94a99}
+    #ricochet-game .rg-smallinfo{margin-top:15px;padding:13px 16px;border-radius:12px;background:#0c1b2a;border:1px solid #294154;display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}
+    #ricochet-game .rg-how{font-size:12px;color:#c0d3df}
+    #ricochet-game .rg-how strong{color:#eaf8fd}
+    #ricochet-game .rg-total{font-size:11px;color:#a3b9c9;white-space:nowrap}
+    #ricochet-game .rg-total strong{color:#d8ff9d;font-size:14px}
+    @media(max-width:650px){#ricochet-game .rg-shell{padding:13px;border-radius:16px}#ricochet-game .rg-top{margin-bottom:15px}#ricochet-game .rg-tag{display:none}#ricochet-game .rg-stats{width:100%;justify-content:stretch}#ricochet-game .rg-stat{flex:1;min-width:80px}#ricochet-game .rg-mission{gap:12px}#ricochet-game .rg-fieldhud{font-size:8px;padding:5px 7px;top:6px}#ricochet-game .rg-toolbar{align-items:stretch}#ricochet-game .rg-controls{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}#ricochet-game .rg-btn{padding:9px;font-size:11px}#ricochet-game .rg-legend{width:100%;justify-content:center}#ricochet-game .rg-smallinfo{padding:10px}#ricochet-game .rg-modal{padding:17px}}
+  </style>
+  <div class="rg-shell">
+    <div class="rg-top">
+      <div class="rg-brand"><div class="rg-mark">↗</div><div><div class="rg-brandname">RICOCHET<span> / RUSH</span></div><div class="rg-subbrand">a physics puzzle playground</div></div></div>
+      <div class="rg-topright"><span class="rg-tag"><span class="rg-tagdot"></span>LIVE PHYSICS</span><button type="button" class="rg-help" id="rg-help" title="How to play">?</button></div>
+    </div>
+    <div class="rg-mission">
+      <div><div class="rg-kicker" id="rg-kicker">LEVEL 01 / 05</div><h2 id="rg-levelname">The First Bounce</h2><div class="rg-desc" id="rg-leveldesc">Turn the ball's momentum into a clean exit.</div></div>
+      <div class="rg-stats">
+        <div class="rg-stat"><div class="rg-statlabel">REFLECTORS</div><div class="rg-statvalue"><span id="rg-used">0</span><em id="rg-max"> / 3</em></div></div>
+        <div class="rg-stat"><div class="rg-statlabel">ELAPSED</div><div class="rg-statvalue" id="rg-time">00:00</div></div>
+        <div class="rg-stat"><div class="rg-statlabel">SHIELDS</div><div class="rg-statvalue rg-heart" id="rg-lives">♥ ♥ ♥</div></div>
+      </div>
+    </div>
+    <div class="rg-field" id="rg-field">
+      <canvas id="rg-board" width="960" height="520" aria-label="Interactive ricochet game board. Drag to place a reflector wall."></canvas>
+      <div class="rg-fieldhud" id="rg-charge"><span class="rg-chargeball"></span><span id="rg-chargetext">EXIT LOCKED · HIT A REFLECTOR TO UNLOCK</span></div>
+      <div class="rg-toast" id="rg-toast" role="status" aria-live="polite"></div>
+      <div class="rg-overlay" id="rg-overlay" hidden>
+        <div class="rg-modal"><div class="rg-modalicon" id="rg-modalicon">✦</div><h3 class="rg-modaltitle" id="rg-modaltitle">Level complete!</h3><div class="rg-stars" id="rg-stars" hidden>★★★</div><p class="rg-modaldesc" id="rg-modaldesc">You made it to the exit.</p><div class="rg-modalbuttons"><button class="rg-btn" id="rg-modalback" type="button">Replay</button><button class="rg-btn rg-btn-primary" id="rg-modalgo" type="button">Next level →</button></div></div>
+      </div>
+    </div>
+    <div class="rg-toolbar">
+      <div class="rg-controls">
+        <button class="rg-btn rg-btn-primary" id="rg-pause" type="button">Ⅱ Pause</button>
+        <button class="rg-btn" id="rg-undo" type="button">↶ Undo wall</button>
+        <button class="rg-btn" id="rg-reset" type="button">⟳ Restart</button>
+      </div>
+      <div class="rg-legend"><span><i class="rg-swatch"></i>Your mirror</span><span><span class="rg-key">SPACE</span> pause</span><span><span class="rg-key">Z</span> undo</span><span><span class="rg-key">R</span> retry</span></div>
+    </div>
+    <div class="rg-smallinfo"><div class="rg-how"><strong>HOW TO PLAY</strong> · Click and drag inside the arena to place an angled mirror. Bounce off your mirror to unlock the green EXIT gate. Avoid red hazards.</div><div class="rg-total">TOTAL STARS <strong id="rg-totalstars">0 / 15 ★</strong></div></div>
+  </div>
+  <script>
+  (() => {
+    const root = document.getElementById('ricochet-game');
+    if (!root || root.dataset.ready === 'yes') return;
+    root.dataset.ready = 'yes';
+    const $ = id => root.querySelector('#' + id);
+    const canvas = $('rg-board');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const W=960,H=520, R=11, EDGE=19;
+    const levels=[
+      {title:'The First Bounce',desc:'Learn the angles. Bounce off one of your mirrors to charge the exit.',start:368,goal:132,gap:112,angle:-.35,speed:248,limit:3,hazards:[],blocks:[]},
+      {title:'Red Alert',desc:'Watch out for the red core. Your three shields are precious.',start:130,goal:362,gap:108,angle:.55,speed:265,limit:3,hazards:[{x:525,y:282,r:28}],blocks:[]},
+      {title:'The Narrow Escape',desc:'The window is smaller, and the arena has two dangers.',start:400,goal:116,gap:86,angle:-.20,speed:287,limit:3,hazards:[{x:365,y:240,r:28},{x:700,y:355,r:31}],blocks:[]},
+      {title:'Trick Shot',desc:'Steel barriers reflect the ball, but only your mirrors unlock EXIT.',start:123,goal:255,gap:88,angle:.62,speed:308,limit:4,hazards:[{x:470,y:134,r:26},{x:747,y:369,r:28}],blocks:[{x1:340,y1:226,x2:485,y2:300}]},
+      {title:'Master of Angles',desc:'A fast ball, a tight exit, two steel bars. Make every bounce count.',start:397,goal:97,gap:78,angle:-.58,speed:325,limit:4,hazards:[{x:287,y:145,r:26},{x:540,y:365,r:30},{x:770,y:192,r:28}],blocks:[{x1:395,y1:65,x2:530,y2:140},{x1:620,y1:404,x2:764,y2:335}]}
+    ];
+    let idx=0,mode='playing',ball,mirrors=[],trail=[],elapsed=0,lives=3,charged=false,reflects=0,hits=0,drag=null,last=performance.now(),sparkles=[],scores=levels.map(()=>0),toastTimeout=0,flash=0,slow=false,exitCooldown=0;
+    let audio=null,overlayKind='',resumeAfterHelp=false;
+    function playSound(type){
+      try { if(!audio) return; const osc=audio.createOscillator(),gain=audio.createGain(), t=audio.currentTime;
+        osc.type=type==='win'?'sine':type==='fail'?'sawtooth':'triangle'; const f=type==='win'?660:type==='fail'?180:type==='charge'?530:360;
+        osc.frequency.setValueAtTime(f,t);osc.frequency.exponentialRampToValueAtTime(type==='win'?1000:Math.max(100,f*.62),t+.12);
+        gain.gain.setValueAtTime(.036,t);gain.gain.exponentialRampToValueAtTime(.0001,t+.16);osc.connect(gain).connect(audio.destination);osc.start(t);osc.stop(t+.17);
+      } catch (_) {}
+    }
+    function activateAudio(){try {if(!audio){const A=window.AudioContext||window.webkitAudioContext;if(A)audio=new A();} if(audio?.state==='suspended') audio.resume();}catch(_){}}
+    function setToast(message){const t=$('rg-toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>t.classList.remove('show'),1700);}
+    function spawn(){const l=levels[idx];ball={x:62,y:l.start,vx:Math.cos(l.angle)*l.speed,vy:Math.sin(l.angle)*l.speed,r:R,immune:1};trail=[];flash=0;exitCooldown=0;}
+    function reset(level=idx){idx=level;const l=levels[idx];mode='playing';mirrors=[];drag=null;elapsed=0;lives=3;charged=false;reflects=0;hits=0; sparkles=[];spawn();$('rg-overlay').hidden=true;$('rg-kicker').textContent=`LEVEL ${String(idx+1).padStart(2,'0')} / ${String(levels.length).padStart(2,'0')}`;$('rg-levelname').textContent=l.title;$('rg-leveldesc').textContent=l.desc;$('rg-max').textContent=' / '+l.limit;sync();last=performance.now();}
+    function sync(){const l=levels[idx];$('rg-used').textContent=mirrors.length;$('rg-max').textContent=' / '+l.limit;$('rg-time').textContent=String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(Math.floor(elapsed%60)).padStart(2,'0');$('rg-lives').textContent='♥ '.repeat(lives)+'♡ '.repeat(3-lives);$('rg-pause').textContent=mode==='paused'?'▶ Resume':'Ⅱ Pause';$('rg-pause').disabled=mode==='won'||mode==='failed';$('rg-undo').disabled=mirrors.length===0||mode==='won'||mode==='failed';const hud=$('rg-charge');hud.classList.toggle('is-charged',charged);$('rg-chargetext').textContent=charged?'EXIT UNLOCKED · REACH THE GREEN GATE':'EXIT LOCKED · HIT A REFLECTOR TO UNLOCK';$('rg-totalstars').textContent=scores.reduce((a,b)=>a+b,0)+' / '+(levels.length*3)+' ★';}
+    function resetBallPenalty(){lives--;hits++;flash=1;playSound('fail');if(lives<=0){mode='failed';showModal('failed');return;}spawn();setToast('Hazard hit! Shield lost — ball relaunched.');sync();}
+    function showModal(kind){overlayKind=kind;const end=kind==='won';$('rg-overlay').hidden=false;$('rg-stars').hidden=!end;$('rg-modalicon').textContent=end?'✦':'✕';$('rg-modalicon').style.color=end?'#c4fb84':'#ff8295';$('rg-modaltitle').textContent=end?(idx===levels.length-1?'You mastered the angles!':'Gate reached!'):'Out of shields';$('rg-modalback').textContent='↻ Replay level';$('rg-modalgo').textContent=end?(idx===levels.length-1?'↻ Play again':'Next level →'):'↻ Try again';$('rg-modaldesc').textContent=end?`Exit reached in ${Math.round(elapsed)}s using ${mirrors.length} mirror${mirrors.length===1?'':'s'}. ${idx===levels.length-1?'Every gate conquered. Play again for more stars!':'Ready for the next challenge?'}`:'The red hazards drained your shields. You keep your knowledge — try a new angle!';}
+    function win(){if(mode!=='playing')return;mode='won';playSound('win');let stars=1;if(hits<=1&&elapsed<65)stars=2;if(hits===0&&elapsed<35&&mirrors.length<=2)stars=3;scores[idx]=Math.max(scores[idx],stars);$('rg-stars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);for(let i=0;i<50;i++)sparkles.push({x:W-29,y:levels[idx].goal,vx:(Math.random()-.5)*430,vy:(Math.random()-.5)*400,life:.7+Math.random()*1.3,age:0,size:2+Math.random()*4});showModal('won');sync();}
+    function nearest(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,ls=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/ls));return{x:x1+t*dx,y:y1+t*dy};}
+    function mirrorBounce(wall,user){const p=nearest(ball.x,ball.y,wall.x1,wall.y1,wall.x2,wall.y2);let nx=ball.x-p.x,ny=ball.y-p.y;let d=Math.hypot(nx,ny);const target=R+(user?5:7);if(d>=target)return;if(d<.001){const dx=wall.x2-wall.x1,dy=wall.y2-wall.y1,ln=Math.hypot(dx,dy)||1;nx=-dy/ln;ny=dx/ln;d=.001;}else{nx/=d;ny/=d;}
+      ball.x+=nx*(target-d+.8);ball.y+=ny*(target-d+.8);const dot=ball.vx*nx+ball.vy*ny;
+      if(dot<-.1){ball.vx-=2*dot*nx;ball.vy-=2*dot*ny;wall.bump=1;playSound(user?'charge':'hit');if(user){reflects++;if(!charged){charged=true;setToast('EXIT UNLOCKED! Now reach the green gate.');sync();}}}
+    }
+    function physics(dt){if(mode!=='playing')return;elapsed+=dt;ball.immune=Math.max(0,ball.immune-dt);exitCooldown=Math.max(0,exitCooldown-dt);flash=Math.max(0,flash-dt*3);
+      const steps=4,part=dt/steps,l=levels[idx];for(let s=0;s<steps;s++){
+        ball.x+=ball.vx*part*(slow?.68:1);ball.y+=ball.vy*part*(slow?.68:1);
+        if(ball.y<R+EDGE){ball.y=R+EDGE;ball.vy=Math.abs(ball.vy);}
+        if(ball.y>H-R-EDGE){ball.y=H-R-EDGE;ball.vy=-Math.abs(ball.vy);}
+        if(ball.x<R+EDGE){ball.x=R+EDGE;ball.vx=Math.abs(ball.vx);}
+        if(ball.x>W-R-EDGE){if(Math.abs(ball.y-l.goal)<l.gap/2-R){if(charged){win();break;}else if(exitCooldown===0){setToast('Exit locked! Bounce off a gold reflector first.');exitCooldown=3;}}ball.x=W-R-EDGE;ball.vx=-Math.abs(ball.vx);}
+        for(const w of l.blocks)mirrorBounce(w,false);
+        for(const w of mirrors)mirrorBounce(w,true);
+        if(ball.immune<=0){let caught=false;for(const h of l.hazards){if(Math.hypot(ball.x-h.x,ball.y-h.y)<h.r+R-2){caught=true;break;}}if(caught){resetBallPenalty();break;}}
+      }
+      trail.push({x:ball.x,y:ball.y});if(trail.length>42)trail.shift();
+      for(const w of mirrors)w.bump=Math.max(0,(w.bump||0)-dt*4);for(const w of l.blocks)w.bump=Math.max(0,(w.bump||0)-dt*4);
+      sync();
+    }
+    function render(now){const l=levels[idx];ctx.clearRect(0,0,W,H);
+      const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#091827');bg.addColorStop(.55,'#07131f');bg.addColorStop(1,'#0a1828');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+      ctx.save();ctx.strokeStyle='#193347';ctx.lineWidth=.7;ctx.globalAlpha=.56;ctx.beginPath();for(let x=36;x<W;x+=40){ctx.moveTo(x,0);ctx.lineTo(x,H);}for(let y=20;y<H;y+=40){ctx.moveTo(0,y);ctx.lineTo(W,y);}ctx.stroke();ctx.restore();
+      ctx.strokeStyle='#2b4a5c';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(EDGE,0);ctx.lineTo(W-EDGE,0);ctx.moveTo(EDGE,H);ctx.lineTo(W-EDGE,H);ctx.stroke();
+      let pulse=(Math.sin(now*.003)+1)/2;
+      ctx.save();let a=ctx.createRadialGradient(32,l.start,5,32,l.start,130);a.addColorStop(0,'#75e8f526');a.addColorStop(1,'#75e8f500');ctx.fillStyle=a;ctx.fillRect(0,l.start-160,240,320);a=ctx.createRadialGradient(W-35,l.goal,8,W-35,l.goal,145);a.addColorStop(0,charged?'#b7f9753d':'#7b94772a');a.addColorStop(1,'#b7f97500');ctx.fillStyle=a;ctx.fillRect(W-230,l.goal-165,230,330);ctx.restore();
+      function edgeLine(x,y1,y2,color){ctx.save();ctx.strokeStyle='#355669';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,EDGE);ctx.lineTo(x,y1);ctx.moveTo(x,y2);ctx.lineTo(x,H-EDGE);ctx.stroke();ctx.shadowColor=color;ctx.shadowBlur=14;ctx.strokeStyle=color;ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x,y2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y1,6,0,Math.PI*2);ctx.arc(x,y2,6,0,Math.PI*2);ctx.fill();ctx.restore();}
+      edgeLine(EDGE,l.start-51,l.start+51,'#74e8f8');edgeLine(W-EDGE,l.goal-l.gap/2,l.goal+l.gap/2,charged?'#c4ff87':'#78997b');
+      ctx.save();ctx.font='800 13px ui-sans-serif,system-ui';ctx.textBaseline='middle';ctx.fillStyle='#a4f3fb';ctx.textAlign='left';ctx.fillText('START  →',41,l.start+5);ctx.fillStyle=charged?'#d0ffaa':'#94b99f';ctx.textAlign='right';ctx.fillText('→  EXIT',W-41,l.goal+5);ctx.restore();
+      for(const h of l.hazards){ctx.save();ctx.translate(h.x,h.y);const glow=12+7*pulse;ctx.shadowColor='#ff546d';ctx.shadowBlur=glow;ctx.fillStyle='#692439';ctx.strokeStyle='#ff6c82';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,h.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(0,0,h.r-8,0,Math.PI*2);ctx.strokeStyle='#ff829955';ctx.lineWidth=1.2;ctx.stroke();ctx.strokeStyle='#ffb0b9';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-9,-9);ctx.lineTo(9,9);ctx.moveTo(9,-9);ctx.lineTo(-9,9);ctx.stroke();ctx.restore();}
+      function paintLine(w,user,preview=false){ctx.save();ctx.lineCap='round';if(preview)ctx.setLineDash([10,7]);ctx.shadowBlur=preview?7:16+(w.bump||0)*16;ctx.shadowColor=user?'#ffc579':'#9aabcc';ctx.lineWidth=user?10:15;ctx.strokeStyle=user?'#edaa54':'#617d9a';ctx.beginPath();ctx.moveTo(w.x1,w.y1);ctx.lineTo(w.x2,w.y2);ctx.stroke();ctx.shadowBlur=0;ctx.lineWidth=user?4:6;ctx.strokeStyle=user?'#ffe1ac':'#bdcfe6';ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=user?'#fff3cb':'#b8cee2';for(const [x,y] of [[w.x1,w.y1],[w.x2,w.y2]]){ctx.beginPath();ctx.arc(x,y,user?5:7,0,Math.PI*2);ctx.fill();}ctx.restore();}
+      for(const b of l.blocks)paintLine(b,false);for(const m of mirrors)paintLine(m,true);
+      if(drag){const end=clampDrag(drag.start,drag.end);const d=Math.hypot(end.x-drag.start.x,end.y-drag.start.y);paintLine({x1:drag.start.x,y1:drag.start.y,x2:end.x,y2:end.y},true,true);ctx.save();ctx.font='700 12px ui-sans-serif,system-ui';ctx.fillStyle='#ffe4b8';ctx.textAlign='center';ctx.fillText(d<30?'DRAG TO AIM':`${Math.round(Math.atan2(end.y-drag.start.y,end.x-drag.start.x)*180/Math.PI)}°`,(drag.start.x+end.x)/2,(drag.start.y+end.y)/2-18);ctx.restore();}
+      for(let i=0;i<trail.length;i++){const p=trail[i],t=(i+1)/trail.length;ctx.fillStyle=`rgba(107,230,250,${t*.36})`;ctx.beginPath();ctx.arc(p.x,p.y,R*(.18+t*.67),0,Math.PI*2);ctx.fill();}
+      ctx.save();ctx.shadowColor='#b9f6ff';ctx.shadowBlur=26;const b=ctx.createRadialGradient(ball.x-4,ball.y-4,2,ball.x,ball.y,R+2);b.addColorStop(0,'#ffffff');b.addColorStop(.4,'#d4f8ff');b.addColorStop(1,'#53cbea');ctx.fillStyle=b;ctx.beginPath();ctx.arc(ball.x,ball.y,R,0,Math.PI*2);ctx.fill();ctx.restore();
+      ctx.save();ctx.strokeStyle='#d9faff8c';ctx.lineWidth=2;ctx.beginPath();const vel=Math.hypot(ball.vx,ball.vy)||1;ctx.moveTo(ball.x,ball.y);ctx.lineTo(ball.x+(ball.vx/vel)*27,ball.y+(ball.vy/vel)*27);ctx.stroke();ctx.restore();
+      for(const p of sparkles){ctx.fillStyle=`rgba(192,250,135,${Math.max(0,1-p.age/p.life)})`;ctx.fillRect(p.x,p.y,p.size,p.size);}
+      if(flash){ctx.fillStyle=`rgba(255,77,98,${flash*.2})`;ctx.fillRect(0,0,W,H);}
+      if(mode==='paused'){ctx.save();ctx.fillStyle='#06121c60';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.font='900 27px ui-sans-serif,system-ui';ctx.fillStyle='#e5f7fe';ctx.fillText('Ⅱ  PAUSED',W/2,H/2-8);ctx.font='500 14px ui-sans-serif,system-ui';ctx.fillStyle='#b1cad9';ctx.fillText('You can still draw your reflectors',W/2,H/2+23);ctx.restore();}
+    }
+    function frame(now){let dt=Math.min(.04,(now-last)/1000||.016);last=now;physics(dt);for(const p of sparkles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=150*dt;p.age+=dt;}sparkles=sparkles.filter(p=>p.age<p.life);render(now);requestAnimationFrame(frame);}
+    function pt(e){const r=canvas.getBoundingClientRect();return{x:Math.min(W-EDGE-8,Math.max(EDGE+8,(e.clientX-r.left)*W/r.width)),y:Math.min(H-EDGE-8,Math.max(EDGE+8,(e.clientY-r.top)*H/r.height))};}
+    function clampDrag(start,end){let dx=end.x-start.x,dy=end.y-start.y,d=Math.hypot(dx,dy);if(d>215){dx=dx*215/d;dy=dy*215/d;}return{x:Math.max(EDGE+8,Math.min(W-EDGE-8,start.x+dx)),y:Math.max(EDGE+8,Math.min(H-EDGE-8,start.y+dy))};}
+    canvas.addEventListener('pointerdown',e=>{if(mode==='won'||mode==='failed')return;if(e.button!==undefined&&e.button!==0)return;activateAudio();e.preventDefault();drag={start:pt(e),end:pt(e),pointer:e.pointerId};try{canvas.setPointerCapture(e.pointerId);}catch(_){}});
+    canvas.addEventListener('pointermove',e=>{if(!drag||drag.pointer!==e.pointerId)return;drag.end=pt(e);});
+    function finishDrag(e){if(!drag||drag.pointer!==e.pointerId)return;const start=drag.start,end=clampDrag(start,pt(e));drag=null;const dist=Math.hypot(end.x-start.x,end.y-start.y);if(dist<30)return;if(mirrors.length>=levels[idx].limit){setToast('All reflectors used! Undo a mirror to place another.');return;}mirrors.push({x1:start.x,y1:start.y,x2:end.x,y2:end.y,bump:0});playSound('hit');sync();}
+    canvas.addEventListener('pointerup',finishDrag);
+    canvas.addEventListener('pointercancel',()=>{drag=null;});
+    $('rg-pause').addEventListener('click',()=>{activateAudio();if(mode==='playing')mode='paused';else if(mode==='paused')mode='playing';sync();});
+    function undo(){if(mirrors.length&&mode!=='won'&&mode!=='failed'){mirrors.pop();sync();setToast('Last reflector removed.');}}
+    $('rg-undo').addEventListener('click',undo);
+    $('rg-reset').addEventListener('click',()=>reset());
+    $('rg-modalback').addEventListener('click',()=>reset());
+    $('rg-modalgo').addEventListener('click',()=>{if(overlayKind==='help'){$('rg-overlay').hidden=true;mode=resumeAfterHelp?'playing':'paused';sync();}else{reset(mode==='won'?(idx+1)%levels.length:idx);}});
+    $('rg-help').addEventListener('click',()=>{resumeAfterHelp=mode==='playing';overlayKind='help';if(resumeAfterHelp)mode='paused';$('rg-overlay').hidden=false;$('rg-modalicon').textContent='⌁';$('rg-modalicon').style.color='#91e5f2';$('rg-modaltitle').textContent='How to play';$('rg-stars').hidden=true;$('rg-modaldesc').innerHTML='The ball starts moving automatically.<br><br><b>1.</b> Click/touch and drag to draw angled gold reflectors.<br><b>2.</b> Bounce off at least one gold reflector to unlock EXIT.<br><b>3.</b> Guide the ball through the green gate on the right.<br><br>Red cores cost a shield. Blue-gray bars reflect the ball but do not unlock the gate.<br><br><b>Space</b> pause · <b>Z</b> undo · <b>R</b> restart';$('rg-modalback').textContent='Restart';$('rg-modalgo').textContent='Got it →';sync();});
+    document.addEventListener('keydown',e=>{if(!root.isConnected)return;if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key===' '){e.preventDefault();if($('rg-overlay').hidden){if(mode==='playing')mode='paused';else if(mode==='paused')mode='playing';sync();}}else if(e.key.toLowerCase()==='z'){undo();}else if(e.key.toLowerCase()==='r'){reset();}});
+    reset(0);requestAnimationFrame(frame);
+  })();
+  </script>
+</div>
+
+</body></html>
